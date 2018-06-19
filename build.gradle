@@ -1,0 +1,73 @@
+
+plugins {
+  id 'java'
+  id 'com.diffplug.gradle.spotless' version '3.12.0'
+  id 'net.ltgt.errorprone' version '0.0.14'
+  id 'org.springframework.boot' version '2.0.3.RELEASE'
+}
+
+group 'net.consensys.rlpapp'
+version '0.1-SNAPSHOT'
+
+apply plugin: 'java'
+apply plugin: 'io.spring.dependency-management'
+apply plugin: 'org.springframework.boot'
+
+sourceCompatibility = 1.8
+
+repositories {
+  jcenter()
+  maven { url "https://consensys.bintray.com/consensys/" }
+}
+
+bootJar { launchScript() }
+
+def cavaVersion = '0.1.0'
+
+dependencies {
+  compile 'org.webjars:bootstrap:3.3.6'
+  compile 'org.webjars:jquery:1.9.1'
+  compile 'com.google.guava:guava:25.1-jre'
+  compile 'org.springframework.boot:spring-boot-starter-web'
+  compile "net.consensys.cava:cava-bytes:$cavaVersion"
+  compile "net.consensys.cava:cava-rlp:$cavaVersion"
+
+  testCompile "net.consensys.cava:junit:$cavaVersion"
+  testCompile 'org.junit.jupiter:junit-jupiter-api:5.1.0'
+  testCompile 'org.junit.jupiter:junit-jupiter-params:5.1.0'
+
+  testRuntime 'org.junit.jupiter:junit-jupiter-engine:5.1.0'
+
+  runtimeOnly 'org.springframework.boot:spring-boot-starter-tomcat'
+}
+
+//////
+// Use JUnit5 for testing
+
+test { useJUnitPlatform() { includeEngines 'junit-jupiter' } }
+
+
+//////
+// Source formatting
+
+spotless {
+  java {
+    target project.fileTree(project.rootDir) {
+      include '**/*.java'
+      exclude '**/generated-src/**/*.*'
+    }
+    removeUnusedImports()
+    eclipse().configFile(rootProject.file('gradle/eclipse-java-consensys-style.xml'))
+    importOrder 'net.consensys', 'java', ''
+    endWithNewline()
+  }
+  groovyGradle {
+    target '**/*.gradle'
+    greclipse().configFile(rootProject.file('gradle/greclipse-gradle-consensys-style.properties'))
+    endWithNewline()
+  }
+  kotlin {
+    ktlint().userData(['indent_size': '2', 'continuation_indent_size' : '2', 'max_line_length': '120'])
+    endWithNewline()
+  }
+}
