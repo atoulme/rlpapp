@@ -67,7 +67,19 @@ public class RLPController {
       if (reader.nextIsList()) {
         elt = reader.readList(listReader -> readRLP(listReader, true));
       } else {
-        elt = new String(reader.readValue().toArrayUnsafe(), StandardCharsets.UTF_8);
+        Bytes rawValue = reader.readValue();
+        boolean isWord = true;
+        for (byte b : rawValue.toArrayUnsafe()) {
+          if (!(Character.isAlphabetic(b) || Character.isDigit(b))) {
+            isWord = false;
+            break;
+          }
+        }
+        if (isWord) {
+          elt = new String(rawValue.toArrayUnsafe(), StandardCharsets.UTF_8);
+        } else {
+          elt = rawValue.toHexString();
+        }
       }
       if (isList) {
         elts.add(elt);
